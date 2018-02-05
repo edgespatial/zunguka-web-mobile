@@ -13,5 +13,4 @@ let mix = require('laravel-mix');
 
 mix.options({ processCssUrls: false })
     .js('assets/js/app.js', 'public/js/app.js')
-    .sass('assets/sass/app.scss', 'public/css/app.css')
-    .browserSync();
+    .sass('assets/sass/app.scss', 'public/css/app.css');
