@@ -50014,7 +50014,7 @@ exports = module.exports = __webpack_require__(43)(false);
 
 
 // module
-exports.push([module.i, "\n#map[data-v-6f0693cb] { min-height: 90vh;\n}\n", ""]);
+exports.push([module.i, "\n#map[data-v-6f0693cb] { \n    min-height: 90vh;\n}\n#search[data-v-6f0693cb] {\n    position: absolute;\n    left: 15%;\n    width: 70%;\n    top: 4%;\n    z-index: 2;\n}\n", ""]);
 
 // exports
 
@@ -50400,6 +50400,14 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
 
 
 var API_VERSION = 'api/v1';
@@ -50423,7 +50431,8 @@ var ACCESS_TOKEN = 'pk.eyJ1IjoiZ2l0YXVtb3NlczQiLCJhIjoiY2pjOWdhODg4MG9kYzJ3bzR0e
             onLoadZoom: ONLOAD_ZOOM,
             animateZoom: ANIMATE_ZOOM,
             animateDuration: ANIMATE_TIME,
-            map: {}
+            map: {},
+            searchText: ""
         };
     },
     mounted: function mounted() {
@@ -50475,15 +50484,47 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _vm._m(0)
+  return _c("div", { staticClass: "row m-0 p-0" }, [
+    _c("div", { staticClass: "input-group", attrs: { id: "search" } }, [
+      _c("input", {
+        directives: [
+          {
+            name: "model",
+            rawName: "v-model",
+            value: _vm.searchText,
+            expression: "searchText"
+          }
+        ],
+        staticClass: "form-control",
+        attrs: { type: "text" },
+        domProps: { value: _vm.searchText },
+        on: {
+          input: function($event) {
+            if ($event.target.composing) {
+              return
+            }
+            _vm.searchText = $event.target.value
+          }
+        }
+      }),
+      _vm._v(" "),
+      _vm._m(0)
+    ]),
+    _vm._v(" "),
+    _c("div", { staticClass: "col-12 m-0 p-0", attrs: { id: "map" } })
+  ])
 }
 var staticRenderFns = [
   function() {
     var _vm = this
     var _h = _vm.$createElement
     var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "row m-0 p-0" }, [
-      _c("div", { staticClass: "col-12 m-0 p-0", attrs: { id: "map" } })
+    return _c("div", { staticClass: "input-group-append" }, [
+      _c(
+        "button",
+        { staticClass: "btn btn-outline-primary", attrs: { type: "button" } },
+        [_c("i", { staticClass: "fa fa-facebook" })]
+      )
     ])
   }
 ]

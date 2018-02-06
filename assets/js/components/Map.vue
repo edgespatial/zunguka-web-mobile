@@ -1,6 +1,14 @@
 <template>
     <div class="row m-0 p-0">
-        <div id="map" class="col-12 m-0 p-0"></div>
+        <div id="search" class="input-group">
+
+            <input type="text" class="form-control" v-model="searchText">
+            <div class="input-group-append">
+                <button class="btn btn-outline-primary" type="button"><i class="fa fa-facebook"></i></button>
+            </div>
+        </div>
+        <div id="map" class="col-12 m-0 p-0">
+        </div>
     </div>
 </template>
 <script>
@@ -27,6 +35,7 @@ export default {
             animateZoom: ANIMATE_ZOOM,
             animateDuration: ANIMATE_TIME,
             map: {},
+            searchText: "",
         };
     },
     mounted() {
@@ -70,5 +79,14 @@ export default {
 </script>
 
 <style scoped>
-    #map { min-height: 90vh; }
+    #map { 
+        min-height: 90vh; 
+    }
+    #search {
+        position: absolute;
+        left: 15%;
+        width: 70%;
+        top: 4%;
+        z-index: 2;
+    }
 </style>
