@@ -1,5 +1,5 @@
 <template>
-    <div class="modal fade buildings-modal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal fade buildings-modal" tabindex="-1" role="dialog" aria-hidden="true">
           <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -9,11 +9,19 @@
                     </button>
                 </div>
                 <div class="modal-body list">
-                    <ul>
-                        <template v-for="building in buildings">
+                    <ul v-if="buildings">
+                        <template v-for="building in buildings.features">
                             <li>
-                                <img class="img-fluid float-left mr-2 mb-3" src="img/placeholder.png">
-                                <p class="d-inline">{{ url }}</p>
+                                <template v-if="building.properties.image">
+                                    <img class="img-fluid float-left mr-2 mb-3" :src="building.properties.image">
+                                </template>
+                                <template v-else>
+                                    <img class="img-fluid float-left mr-2 mb-3" src="img/placeholder.png">
+                                </template>
+                                <p class="d-inline">
+                                    {{ building.properties.name }} 
+                                    {{ building.properties.abrv ? `(${building.properties.abrv})` : '' }}
+                                </p>
                                 <button class="btn btn-primary float-right locate"><i class="fa fa-map-marker"></i></button>
                             </li>
                         </template>
@@ -28,19 +36,6 @@
 
 <script>
 export default {
-    props: [ 'url' ],
-    data() {
-        return {
-            buildings: {},
-        }
-    },
-    mounted() {
-        const vm = this;
-        axios.get(`${vm.url}/buildings/?format=json`).then((res) => {
-            vm.buildings = res.data; 
-        }).catch((err) => {
-            console.log(err);
-        });
-    }
+    props: [ 'buildings' ],
 }
 </script>

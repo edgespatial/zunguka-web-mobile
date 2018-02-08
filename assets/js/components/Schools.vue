@@ -28,7 +28,10 @@
                                     </tbody>
                                 </table>
                                 -->
-                                <p class="d-inline">{{ school.name }}</p>
+                                <p class="d-inline">
+                                    {{ school.name }}
+                                    {{ school.abrv ? `(${school.abrv})` : '' }}
+                                </p>
                                 <button class="btn float-right locate"><i class="fa fa-map-marker"></i></button>
                             </li>
                         </template>
@@ -43,19 +46,6 @@
 
 <script>
 export default {
-    props: [ 'url' ],
-    data() {
-        return {
-            schools: {},
-        }
-    },
-    mounted() {
-        const vm = this;
-        axios.get(`${vm.url}/schools/?format=json`).then((res) => {
-            vm.schools = res.data; 
-        }).catch((err) => {
-            console.log(err);
-        });
-    }
+    props: [ 'schools' ],
 }
 </script>

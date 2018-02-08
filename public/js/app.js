@@ -11453,17 +11453,8 @@ module.exports = __webpack_require__(56);
 __webpack_require__(13);
 window.Vue = __webpack_require__(39);
 
-Vue.component('mapbox', __webpack_require__(42));
-Vue.component('buildings-modal', __webpack_require__(50));
-Vue.component('schools-modal', __webpack_require__(53));
-
-var API_VERSION = 'api/v1';
-var API_HOST = 'http://zunguka-api.herokuapp.com';
-
+Vue.component('app', __webpack_require__(63));
 new Vue({
-    data: {
-        url: API_HOST + '/' + API_VERSION
-    },
     el: '#app'
 });
 
@@ -50408,20 +50399,22 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
 
 
-var API_VERSION = 'api/v1';
-var API_HOST = 'http://zunguka-api.herokuapp.com';
-var MAP_STYLE = 'mapbox://styles/mapbox/streets-v9';
-var CENTER = [37.0104, -1.0902];
-var MAP_CONTAINER = 'map';
 var ONLOAD_ZOOM = 10;
 var ANIMATE_ZOOM = 14;
 var ANIMATE_TIME = 3500; // 3.5 seconds
+var CENTER = [37.0104, -1.0902];
+var MAP_CONTAINER = 'map';
+var MAP_STYLE = 'mapbox://styles/mapbox/streets-v9';
 var ACCESS_TOKEN = 'pk.eyJ1IjoiZ2l0YXVtb3NlczQiLCJhIjoiY2pjOWdhODg4MG9kYzJ3bzR0eHE0ZXVodyJ9.zU1cfiq9SWoVsTaPdoFnBQ';
 
+var MAX_SEARCH_RESULTS = 5;
+
 /* harmony default export */ __webpack_exports__["default"] = ({
-    props: ['url'],
+    props: ['url', 'schools', 'buildings'],
     data: function data() {
         return {
             mapStyle: MAP_STYLE,
@@ -50432,8 +50425,35 @@ var ACCESS_TOKEN = 'pk.eyJ1IjoiZ2l0YXVtb3NlczQiLCJhIjoiY2pjOWdhODg4MG9kYzJ3bzR0e
             animateZoom: ANIMATE_ZOOM,
             animateDuration: ANIMATE_TIME,
             map: {},
-            searchText: ""
+            searchText: "",
+            searchItems: {}
         };
+    },
+
+    watch: {
+        searchText: function searchText() {
+            var vm = this;
+            if (vm.searchText.trim() == '') vm.searchItems = [];else vm.buildSearchItems();
+        }
+    },
+    methods: {
+        buildSearchItems: _.debounce(function () {
+            var vm = this;
+
+            var items = [];
+            var search = _.lowerCase(vm.searchText.trim());
+            for (var i = 0; i < vm.schools.length; ++i) {
+                var school = vm.schools[i];
+                if (school && school.name) {
+                    var name = _.lowerCase(school.name);
+                    if (name.indexOf(search) != -1) {
+                        items.push(school.name);
+                    }
+                    if (items.length >= MAX_SEARCH_RESULTS) break;
+                }
+            }
+            vm.searchItems = items;
+        }, 500)
     },
     mounted: function mounted() {
         var vm = this;
@@ -50512,7 +50532,16 @@ var render = function() {
         }
       }),
       _vm._v(" "),
-      _c("datalist", { attrs: { id: "locations" } }),
+      _c(
+        "datalist",
+        { attrs: { id: "locations" } },
+        [
+          _vm._l(_vm.searchItems, function(item) {
+            return [_c("option", { domProps: { value: item } })]
+          })
+        ],
+        2
+      ),
       _vm._v(" "),
       _vm._m(0)
     ]),
@@ -50624,22 +50653,17 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
-    props: ['url'],
-    data: function data() {
-        return {
-            buildings: {}
-        };
-    },
-    mounted: function mounted() {
-        var vm = this;
-        axios.get(vm.url + '/buildings/?format=json').then(function (res) {
-            vm.buildings = res.data;
-        }).catch(function (err) {
-            console.log(err);
-        });
-    }
+    props: ['buildings']
 });
 
 /***/ }),
@@ -50654,12 +50678,7 @@ var render = function() {
     "div",
     {
       staticClass: "modal fade buildings-modal",
-      attrs: {
-        tabindex: "-1",
-        role: "dialog",
-        "aria-labelledby": "myLargeModalLabel",
-        "aria-hidden": "true"
-      }
+      attrs: { tabindex: "-1", role: "dialog", "aria-hidden": "true" }
     },
     [
       _c("div", { staticClass: "modal-dialog modal-lg" }, [
@@ -50667,28 +50686,55 @@ var render = function() {
           _vm._m(0),
           _vm._v(" "),
           _c("div", { staticClass: "modal-body list" }, [
-            _c(
-              "ul",
-              [
-                _vm._l(_vm.buildings, function(building) {
-                  return [
-                    _c("li", [
-                      _c("img", {
-                        staticClass: "img-fluid float-left mr-2 mb-3",
-                        attrs: { src: "img/placeholder.png" }
-                      }),
-                      _vm._v(" "),
-                      _c("p", { staticClass: "d-inline" }, [
-                        _vm._v(_vm._s(_vm.url))
-                      ]),
-                      _vm._v(" "),
-                      _vm._m(1, true)
-                    ])
-                  ]
-                })
-              ],
-              2
-            )
+            _vm.buildings
+              ? _c(
+                  "ul",
+                  [
+                    _vm._l(_vm.buildings.features, function(building) {
+                      return [
+                        _c(
+                          "li",
+                          [
+                            building.properties.image
+                              ? [
+                                  _c("img", {
+                                    staticClass:
+                                      "img-fluid float-left mr-2 mb-3",
+                                    attrs: { src: building.properties.image }
+                                  })
+                                ]
+                              : [
+                                  _c("img", {
+                                    staticClass:
+                                      "img-fluid float-left mr-2 mb-3",
+                                    attrs: { src: "img/placeholder.png" }
+                                  })
+                                ],
+                            _vm._v(" "),
+                            _c("p", { staticClass: "d-inline" }, [
+                              _vm._v(
+                                "\n                                " +
+                                  _vm._s(building.properties.name) +
+                                  " \n                                " +
+                                  _vm._s(
+                                    building.properties.abrv
+                                      ? "(" + building.properties.abrv + ")"
+                                      : ""
+                                  ) +
+                                  "\n                            "
+                              )
+                            ]),
+                            _vm._v(" "),
+                            _vm._m(1, true)
+                          ],
+                          2
+                        )
+                      ]
+                    })
+                  ],
+                  2
+                )
+              : _vm._e()
           ]),
           _vm._v(" "),
           _c("div", { staticClass: "modal-footer" })
@@ -50833,22 +50879,12 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
-    props: ['url'],
-    data: function data() {
-        return {
-            schools: {}
-        };
-    },
-    mounted: function mounted() {
-        var vm = this;
-        axios.get(vm.url + '/schools/?format=json').then(function (res) {
-            vm.schools = res.data;
-        }).catch(function (err) {
-            console.log(err);
-        });
-    }
+    props: ['schools']
 });
 
 /***/ }),
@@ -50884,7 +50920,13 @@ var render = function() {
                       }),
                       _vm._v(" "),
                       _c("p", { staticClass: "d-inline" }, [
-                        _vm._v(_vm._s(school.name))
+                        _vm._v(
+                          "\n                                " +
+                            _vm._s(school.name) +
+                            "\n                                " +
+                            _vm._s(school.abrv ? "(" + school.abrv + ")" : "") +
+                            "\n                            "
+                        )
                       ]),
                       _vm._v(" "),
                       _vm._m(1, true)
@@ -50947,6 +50989,227 @@ if (false) {
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 57 */,
+/* 58 */,
+/* 59 */,
+/* 60 */,
+/* 61 */,
+/* 62 */,
+/* 63 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var disposed = false
+var normalizeComponent = __webpack_require__(3)
+/* script */
+var __vue_script__ = __webpack_require__(64)
+/* template */
+var __vue_template__ = __webpack_require__(65)
+/* template functional */
+var __vue_template_functional__ = false
+/* styles */
+var __vue_styles__ = null
+/* scopeId */
+var __vue_scopeId__ = null
+/* moduleIdentifier (server only) */
+var __vue_module_identifier__ = null
+var Component = normalizeComponent(
+  __vue_script__,
+  __vue_template__,
+  __vue_template_functional__,
+  __vue_styles__,
+  __vue_scopeId__,
+  __vue_module_identifier__
+)
+Component.options.__file = "assets/js/components/App.vue"
+
+/* hot reload */
+if (false) {(function () {
+  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), false)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-0dd47e10", Component.options)
+  } else {
+    hotAPI.reload("data-v-0dd47e10", Component.options)
+  }
+  module.hot.dispose(function (data) {
+    disposed = true
+  })
+})()}
+
+module.exports = Component.exports
+
+
+/***/ }),
+/* 64 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+
+var API_VERSION = 'api/v1';
+var API_HOST = 'http://zunguka-api.herokuapp.com';
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+    data: function data() {
+        return {
+            url: API_HOST + '/' + API_VERSION,
+            schools: {},
+            buildings: {}
+        };
+    },
+    mounted: function mounted() {
+        var vm = this;
+        axios.get(vm.url + '/buildings/?format=json').then(function (res) {
+            vm.buildings = res.data;
+        }).catch(function (err) {
+            console.log(err);
+        });
+
+        axios.get(vm.url + '/schools/?format=json').then(function (res) {
+            vm.schools = res.data;
+        }).catch(function (err) {
+            console.log(err);
+        });
+    },
+
+    components: {
+        schools: __webpack_require__(53),
+        buildings: __webpack_require__(50),
+        mapbox: __webpack_require__(42)
+    }
+});
+
+/***/ }),
+/* 65 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c(
+    "div",
+    [
+      _c("div", { staticClass: "container-fluid m-0 p-0" }, [
+        _c(
+          "div",
+          { staticClass: "row m-0 p-0" },
+          [
+            _c("mapbox", {
+              staticClass: "col-12 m-0 p-0",
+              attrs: {
+                url: _vm.url,
+                buildings: _vm.buildings,
+                schools: _vm.schools
+              }
+            })
+          ],
+          1
+        )
+      ]),
+      _vm._v(" "),
+      _vm._m(0),
+      _vm._v(" "),
+      _c("buildings", { attrs: { buildings: _vm.buildings } }),
+      _vm._v(" "),
+      _c("schools", { attrs: { schools: _vm.schools } })
+    ],
+    1
+  )
+}
+var staticRenderFns = [
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "container-fluid m-0 p-0 controls" }, [
+      _c("div", { staticClass: "row text-center m-0 p-0" }, [
+        _c("div", { staticClass: "col-3" }, [
+          _c("a", { attrs: { href: "#" } }, [
+            _c("i", { staticClass: "fa fa-map" }),
+            _vm._v("Home")
+          ])
+        ]),
+        _vm._v(" "),
+        _c("div", { staticClass: "col-3" }, [
+          _c(
+            "a",
+            {
+              attrs: {
+                href: "#",
+                "data-toggle": "modal",
+                "data-target": ".buildings-modal"
+              }
+            },
+            [_c("i", { staticClass: "fa fa-building" }), _vm._v("Buildings")]
+          )
+        ]),
+        _vm._v(" "),
+        _c("div", { staticClass: "col-3" }, [
+          _c(
+            "a",
+            {
+              attrs: {
+                href: "#",
+                "data-toggle": "modal",
+                "data-target": ".schools-modal"
+              }
+            },
+            [_c("i", { staticClass: "fa fa-university" }), _vm._v("Schools")]
+          )
+        ]),
+        _vm._v(" "),
+        _c("div", { staticClass: "col-3" }, [
+          _c("a", { attrs: { href: "#" } }, [
+            _c("i", { staticClass: "fa fa-arrow-circle-o-up" }),
+            _vm._v(" Tour")
+          ])
+        ])
+      ])
+    ])
+  }
+]
+render._withStripped = true
+module.exports = { render: render, staticRenderFns: staticRenderFns }
+if (false) {
+  module.hot.accept()
+  if (module.hot.data) {
+    require("vue-hot-reload-api")      .rerender("data-v-0dd47e10", module.exports)
+  }
+}
 
 /***/ })
 /******/ ]);

@@ -1,9 +1,11 @@
 <template>
     <div class="row m-0 p-0">
         <div id="search" class="input-group">
-
-            <input list="locations" type="text" placeholder="Type to search..." class="form-control search-input" v-model="searchText">
+            <input v-model="searchText" list="locations" type="text" placeholder="Type to search..." class="form-control search-input" >
             <datalist id="locations">
+                <template v-for="item in searchItems">
+                    <option :value="item"></option>
+                </template>
             </datalist>
             <div class="input-group-append">
                 <button class="btn btn-search" type="button"><i class="fa fa-search"></i></button>
@@ -16,18 +18,18 @@
 
 <script>
 
-const API_VERSION   = 'api/v1';
-const API_HOST      = 'http://zunguka-api.herokuapp.com';
-const MAP_STYLE     = 'mapbox://styles/mapbox/streets-v9';
-const CENTER        = [37.0104, -1.0902];
-const MAP_CONTAINER = 'map';
 const ONLOAD_ZOOM   = 10;
 const ANIMATE_ZOOM  = 14;
 const ANIMATE_TIME  = 3500; // 3.5 seconds
+const CENTER        = [37.0104, -1.0902];
+const MAP_CONTAINER = 'map';
+const MAP_STYLE     = 'mapbox://styles/mapbox/streets-v9';
 const ACCESS_TOKEN  = 'pk.eyJ1IjoiZ2l0YXVtb3NlczQiLCJhIjoiY2pjOWdhODg4MG9kYzJ3bzR0eHE0ZXVodyJ9.zU1cfiq9SWoVsTaPdoFnBQ';
 
+const MAX_SEARCH_RESULTS = 5;
+
 export default {
-    props: [ 'url' ],
+    props: [ 'url', 'schools', 'buildings' ],
     data() {
         return {
             mapStyle: MAP_STYLE,
@@ -39,7 +41,37 @@ export default {
             animateDuration: ANIMATE_TIME,
             map: {},
             searchText: "",
+            searchItems: {},
         };
+    },
+    watch: {
+        searchText: function () {
+            const vm = this;
+            if (vm.searchText.trim() == '') 
+                vm.searchItems = [];
+            else
+                vm.buildSearchItems();
+        },
+    },
+    methods: {
+       buildSearchItems: _.debounce(function() {
+           const vm = this;
+
+           let items = [];
+           let search = _.lowerCase(vm.searchText.trim());
+           for (let i = 0; i < vm.schools.length; ++i) {
+               let school = vm.schools[i];
+               if (school && school.name) {
+                   let name = _.lowerCase(school.name);
+                   if (name.indexOf(search) != -1) {
+                       items.push(school.name);
+                   }
+                   if (items.length >= MAX_SEARCH_RESULTS)
+                       break;
+               }
+           }
+           vm.searchItems = items;
+        }, 500),
     },
     mounted() {
         const vm = this;
