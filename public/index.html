@@ -7,12 +7,32 @@
     <link rel="stylesheet" type="text/css" href="css/app.css">
 </head>
 <body>
-    <div id="app" class="container-fluid m-0 p-0">
-        <div is="mapbox"></div>
-        <div class="row m-0 p-0"></div>
+    <div id="app">
+        <div class="container-fluid m-0 p-0">
+            <div class="row m-0 p-0">
+                <div is="mapbox" class="col-12 m-0 p-0"> </div>
+            </div>
+        </div>
+        <div class="container-fluid m-0 p-0 controls">
+            <div class="row text-center m-0 p-0">
+                <div class="col-3">
+                    <a href="#"><i class="fa fa-map"></i>Home</a>
+                </div>
+                <div class="col-3">
+                    <a href="#" data-toggle="modal" data-target=".buildings-modal"><i class="fa fa-building"> </i>Buildings</a>
+                </div>
+                <div class="col-3">
+                    <a href="#" data-toggle="modal" data-target=".schools-modal"><i class="fa fa-university"> </i>Schools</a>
+                </div>
+                <div class="col-3">
+                    <a href="#"><i class="fa fa-arrow-circle-o-up"></i> Tour</a>
+                </div>
+            </div>
+        </div>
+        <div :url="url" is="buildings-modal"></div>
+        <div :url="url" is="schools-modal"></div>
     </div>
     <script src="js/app.js"></script>
-<style scoped> #app { min-height: 100vh; } </style>
+    <script> $(function() {$('.schools-modal').modal('show');})  </script>
 </body>
 </html>
-

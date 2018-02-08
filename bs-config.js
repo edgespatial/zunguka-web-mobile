@@ -19,7 +19,7 @@ module.exports = {
             "port": 8080
         }
     },
-    "files": ['./assets/**/*.vue', './assets/**/*.css', './assets/**/*.js', './assets/**/*.html'],
+    "files": ['./assets/**/*.vue', './assets/**/*.css', './assets/**/*.js', './public/**/*.html'],
     "watchEvents": [
         "change"
     ],

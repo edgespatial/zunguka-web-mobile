@@ -13,4 +13,7 @@ let mix = require('laravel-mix');
 
 mix.options({ processCssUrls: false })
     .js('assets/js/app.js', 'public/js/app.js')
-    .sass('assets/sass/app.scss', 'public/css/app.css');
+    .sass('assets/sass/app.scss', 'public/css/sass.css')
+    .styles(['assets/css/app.css', 'public/css/sass.css'], 'public/css/app.css')
+    .copyDirectory('assets/fonts', 'public/fonts')
+    .copyDirectory('assets/img', 'public/img');

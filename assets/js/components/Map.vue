@@ -2,15 +2,18 @@
     <div class="row m-0 p-0">
         <div id="search" class="input-group">
 
-            <input type="text" class="form-control" v-model="searchText">
+            <input list="locations" type="text" placeholder="Type to search..." class="form-control search-input" v-model="searchText">
+            <datalist id="locations">
+            </datalist>
             <div class="input-group-append">
-                <button class="btn btn-outline-primary" type="button"><i class="fa fa-facebook"></i></button>
+                <button class="btn btn-search" type="button"><i class="fa fa-search"></i></button>
             </div>
         </div>
         <div id="map" class="col-12 m-0 p-0">
         </div>
     </div>
 </template>
+
 <script>
 
 const API_VERSION   = 'api/v1';
@@ -18,15 +21,15 @@ const API_HOST      = 'http://zunguka-api.herokuapp.com';
 const MAP_STYLE     = 'mapbox://styles/mapbox/streets-v9';
 const CENTER        = [37.0104, -1.0902];
 const MAP_CONTAINER = 'map';
-const ONLOAD_ZOOM   = 5;
+const ONLOAD_ZOOM   = 10;
 const ANIMATE_ZOOM  = 14;
 const ANIMATE_TIME  = 3500; // 3.5 seconds
 const ACCESS_TOKEN  = 'pk.eyJ1IjoiZ2l0YXVtb3NlczQiLCJhIjoiY2pjOWdhODg4MG9kYzJ3bzR0eHE0ZXVodyJ9.zU1cfiq9SWoVsTaPdoFnBQ';
 
 export default {
+    props: [ 'url' ],
     data() {
         return {
-            apiUrl: `${API_HOST}/${API_VERSION}`,
             mapStyle: MAP_STYLE,
             accessToken: ACCESS_TOKEN,
             mapContainer: MAP_CONTAINER,
@@ -65,7 +68,7 @@ export default {
                         type: 'line',
                         source: {
                             type: 'geojson',
-                            data: `${vm.apiUrl}/boundary/?format=json`,
+                            data: `${vm.url}/boundary/?format=json`,
                         },
                         paint: {
                             'line-color': 'orange',
@@ -80,13 +83,24 @@ export default {
 
 <style scoped>
     #map { 
-        min-height: 90vh; 
+        border: 1px solid orange;
+        min-height: calc(100vh - 130px); 
     }
     #search {
         position: absolute;
-        left: 15%;
-        width: 70%;
+        left: 10%;
+        width: 80%;
         top: 4%;
         z-index: 2;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    }
+    .search-input {
+        font-size: 18px;
+        border-radius: 0px;
+    }
+    .btn-search {
+        border-radius: 0px;
+        background-color: orange;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
     }
 </style>
