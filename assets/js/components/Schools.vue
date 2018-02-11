@@ -46,6 +46,6 @@
 
 <script>
 export default {
-    props: [ 'schools' ],
+    props: [ 'schools', 'map' ],
 }
 </script>
