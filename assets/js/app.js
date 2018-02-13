@@ -3,7 +3,7 @@ window.Vue = require('vue');
 
 
 Vue.component('app', require('./components/App.vue'));
-new Vue({
+const app = new Vue({
     el: '#app',
 });
 

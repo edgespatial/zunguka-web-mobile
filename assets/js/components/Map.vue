@@ -10,32 +10,47 @@ const ANIMATE_ZOOM  = 14;
 const ANIMATE_TIME  = 1500; // 1.5 seconds
 
 export default {
-    props: [ 'map', 'zoom', 'center', 'boundaries', 'markers', 'perimeterBoundary' ],
+    props: [ 'map', 'zoom', 'center', 'activeBoundary', 'activeMarker', 'perimeterBoundary' ],
     data() {
         return {
+            marker: {},
+            boundariesCount: 0,
             animateZoom: ANIMATE_ZOOM,
             animateDuration: ANIMATE_TIME,
         };
     },
     watch: {
-        zoom: this.animateChange,
-        center: this.animateChange,
-        boundaries: function() {
+        zoom: function () {
+            this.animateChange();
+        },
+        center: function () {
+            this.animateChange();
+        },
+        activeBoundary: function() {
             const vm = this;
-            for (let i = 0; i < vm.boundaries.length; ++i) {
+            if (vm.map.getSource('trace')) {
+                vm.map.getSource('trace').setData(vm.activeBoundary);
+            } else {
+                vm.map.addSource('trace', { type: 'geojson', data: vm.activeBoundary });
                 vm.map.addLayer({
-                    id: `building_${i}`,
+                    id: 'activeBoundary',
                     type: 'line',
-                    source: {
-                        type: 'geojson',
-                        data: vm.boundaries[i],
-                    },
+                    source: 'trace',
                     paint: {
                         'line-color': 'orange',
                     }
                 });
             }
-        }
+        },
+        activeMarker: function() {
+            const vm = this;
+            try {
+                vm.marker.remove();
+            } catch (e) { }
+            vm.marker = new mapboxgl.Marker()
+                .setLngLat(vm.activeMarker)
+                .addTo(vm.map);
+        },
     },
     methods: {
         animateChange() {
@@ -44,7 +59,7 @@ export default {
                 animate: true,
                 duration: vm.animateDuration,
                 center: vm.center,
-                zoom: vm.animateZoom,
+                zoom: vm.zoom,
                 ease: t =>  t * t * t // easeInCube
             });
         }

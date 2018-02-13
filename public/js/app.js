@@ -50430,6 +50430,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
 
 
 var API_VERSION = 'api/v1';
@@ -50440,6 +50441,7 @@ var ACCESS_TOKEN = 'pk.eyJ1IjoiZ2l0YXVtb3NlczQiLCJhIjoiY2pjOWdhODg4MG9kYzJ3bzR0e
 var CENTER = [37.0104, -1.0902];
 var MAX_SEARCH_RESULTS = 5;
 var ONLOAD_ZOOM = 10;
+var ONFOCUS_ZOOM = 18;
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     data: function data() {
@@ -50452,12 +50454,14 @@ var ONLOAD_ZOOM = 10;
             mapContainer: MAP_CONTAINER,
             center: CENTER,
             onLoadZoom: ONLOAD_ZOOM,
+            onFocusZoom: ONFOCUS_ZOOM,
             map: {},
             searchText: "",
             searchItems: {},
             perimeterBoundary: {},
-            boundaries: [],
-            markers: []
+            activeBoundary: {},
+            activeMarker: {},
+            zoom: {}
         };
     },
 
@@ -50495,19 +50499,74 @@ var ONLOAD_ZOOM = 10;
 
             vm.searchItems = _.take(items.sort(), MAX_SEARCH_RESULTS);
         }, 500),
+        multiPolygonCenter: function multiPolygonCenter(multiPoly) {
+            if (!multiPoly || !multiPoly.length) return NaN;
 
-        coordsCenter: function coordsCenter(coords) {
-            if (!coords || !coords.length) return NaN;
+            var vm = this;
+            var lat = 0;
+            var lng = 0;
+            var latLng = null;
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
+
+            try {
+                for (var _iterator = multiPoly[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var poly = _step.value;
+
+                    latLng = vm.polygonCenter(poly);
+                    lat += latLng[0];
+                    lng += latLng[1];
+                }
+            } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                        _iterator.return();
+                    }
+                } finally {
+                    if (_didIteratorError) {
+                        throw _iteratorError;
+                    }
+                }
+            }
+
+            return [lat / multiPoly.length, lng / multiPoly.length];
+        },
+        polygonCenter: function polygonCenter(poly) {
+            if (!poly || !poly.length) return NaN;
 
             var lng = 0;
             var lat = 0;
-            for (var i = 0; i < coords.length; ++i) {
-                lng += coords[i][0];
-                lat += coords[i][1];
+            var _iteratorNormalCompletion2 = true;
+            var _didIteratorError2 = false;
+            var _iteratorError2 = undefined;
+
+            try {
+                for (var _iterator2 = poly[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                    var coord = _step2.value;
+
+                    lat += coord[0];
+                    lng += coord[1];
+                }
+            } catch (err) {
+                _didIteratorError2 = true;
+                _iteratorError2 = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                        _iterator2.return();
+                    }
+                } finally {
+                    if (_didIteratorError2) {
+                        throw _iteratorError2;
+                    }
+                }
             }
 
-            lat /= coords.length;lng /= coords.length;
-            return [lat, lng];
+            return [lat / coords.length, lng / poly.length];
         },
         locateBuilding: function locateBuilding(id) {
             var vm = this;
@@ -50515,7 +50574,10 @@ var ONLOAD_ZOOM = 10;
                 return b.id == id;
             });
             if (building) {
-                vm.boundaries.push(building);
+                vm.activeBoundary = building.geom;
+                vm.activeMarker = building.center;
+                vm.center = building.center;
+                vm.zoom = vm.onFocusZoom;
             }
         }
     },
@@ -50536,7 +50598,7 @@ var ONLOAD_ZOOM = 10;
         axios.get(vm.url + '/buildings/?format=json').then(function (res) {
             vm.buildings = res.data;
             for (var i = 0; i < vm.buildings.length; ++i) {
-                vm.buildings[i].center = vm.coordsCenter(vm.buildings[i].geom.coordinates[0][0]);
+                vm.buildings[i].center = vm.multiPolygonCenter(vm.buildings[i].geom.coordinates);
             }
         }).catch(function (err) {
             console.log(err);
@@ -50850,6 +50912,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
     props: ['buildings', 'map'],
     methods: {
         locate: function locate(id) {
+            $('.buildings-modal').modal('hide');
             this.$emit('locateBuilding', id);
         }
     }
@@ -51085,32 +51148,45 @@ var ANIMATE_ZOOM = 14;
 var ANIMATE_TIME = 1500; // 1.5 seconds
 
 /* harmony default export */ __webpack_exports__["default"] = ({
-    props: ['map', 'zoom', 'center', 'boundaries', 'markers', 'perimeterBoundary'],
+    props: ['map', 'zoom', 'center', 'activeBoundary', 'activeMarker', 'perimeterBoundary'],
     data: function data() {
         return {
+            marker: {},
+            boundariesCount: 0,
             animateZoom: ANIMATE_ZOOM,
             animateDuration: ANIMATE_TIME
         };
     },
 
     watch: {
-        zoom: this.animateChange,
-        center: this.animateChange,
-        boundaries: function boundaries() {
+        zoom: function zoom() {
+            this.animateChange();
+        },
+        center: function center() {
+            this.animateChange();
+        },
+        activeBoundary: function activeBoundary() {
             var vm = this;
-            for (var i = 0; i < vm.boundaries.length; ++i) {
+            if (vm.map.getSource('trace')) {
+                vm.map.getSource('trace').setData(vm.activeBoundary);
+            } else {
+                vm.map.addSource('trace', { type: 'geojson', data: vm.activeBoundary });
                 vm.map.addLayer({
-                    id: 'building_' + i,
+                    id: 'activeBoundary',
                     type: 'line',
-                    source: {
-                        type: 'geojson',
-                        data: vm.boundaries[i]
-                    },
+                    source: 'trace',
                     paint: {
                         'line-color': 'orange'
                     }
                 });
             }
+        },
+        activeMarker: function activeMarker() {
+            var vm = this;
+            try {
+                vm.marker.remove();
+            } catch (e) {}
+            vm.marker = new mapboxgl.Marker().setLngLat(vm.activeMarker).addTo(vm.map);
         }
     },
     methods: {
@@ -51120,7 +51196,7 @@ var ANIMATE_TIME = 1500; // 1.5 seconds
                 animate: true,
                 duration: vm.animateDuration,
                 center: vm.center,
-                zoom: vm.animateZoom,
+                zoom: vm.zoom,
                 ease: function ease(t) {
                     return t * t * t;
                 } // easeInCube
@@ -51250,9 +51326,10 @@ var render = function() {
               staticClass: "col-12 m-0 p-0",
               attrs: {
                 map: _vm.map,
-                markers: _vm.markers,
-                boundaries: _vm.boundaries,
+                activeMarker: _vm.activeMarker,
+                activeBoundary: _vm.activeBoundary,
                 center: _vm.center,
+                zoom: _vm.zoom,
                 perimeterBoundary: _vm.perimeterBoundary
               }
             })

@@ -15,9 +15,10 @@
                 </div>
                 <mapbox class="col-12 m-0 p-0"
                     :map="map" 
-                    :markers="markers"
-                    :boundaries="boundaries"
+                    :activeMarker="activeMarker"
+                    :activeBoundary="activeBoundary"
                     :center="center"
+                    :zoom="zoom"
                     :perimeterBoundary="perimeterBoundary"></mapbox>
             </div>
         </div>
@@ -55,6 +56,7 @@ const ACCESS_TOKEN  = 'pk.eyJ1IjoiZ2l0YXVtb3NlczQiLCJhIjoiY2pjOWdhODg4MG9kYzJ3bz
 const CENTER        = [37.0104, -1.0902];
 const MAX_SEARCH_RESULTS = 5;
 const ONLOAD_ZOOM = 10;
+const ONFOCUS_ZOOM = 18;
 
 export default {
     data() {
@@ -67,12 +69,14 @@ export default {
             mapContainer: MAP_CONTAINER,
             center: CENTER,
             onLoadZoom: ONLOAD_ZOOM,
+            onFocusZoom: ONFOCUS_ZOOM,
             map: {},
             searchText: "",
             searchItems: {},
             perimeterBoundary: {},
-            boundaries: [],
-            markers: []
+            activeBoundary: {},
+            activeMarker: {},
+            zoom: {},
         }
     },
     watch: {
@@ -112,26 +116,42 @@ export default {
 
            vm.searchItems = _.take(items.sort(), MAX_SEARCH_RESULTS);
         }, 500),
+        multiPolygonCenter(multiPoly) {
+            if (! multiPoly || ! multiPoly.length) 
+                return NaN;
 
-        coordsCenter(coords) {
-            if (! coords || ! coords.length) 
+            const vm = this;
+            let lat = 0;
+            let lng = 0;
+            let latLng = null;
+            for (let poly of multiPoly) {
+                latLng = vm.polygonCenter(poly); 
+                lat += latLng[0];
+                lng += latLng[1];
+            }
+            return [lat/multiPoly.length, lng/multiPoly.length];
+        },
+        polygonCenter(poly) {
+            if (! poly || ! poly.length) 
                 return NaN;
 
             let lng = 0; 
             let lat = 0;
-            for (let i = 0; i < coords.length; ++i) {
-                lng += coords[i][0]; 
-                lat += coords[i][1]; 
+            for (let coord of poly) {
+                lat += coord[0]; 
+                lng += coord[1]; 
             }
 
-            lat /= coords.length; lng /= coords.length;
-            return [lat, lng];
+            return [lat/coords.length, lng/poly.length];
         },
         locateBuilding(id) {
             const vm = this;
             const building = vm.buildings.find(b => b.id == id);
             if (building) {
-                vm.boundaries.push(building);
+                vm.activeBoundary = building.geom;
+                vm.activeMarker = building.center;
+                vm.center = building.center;
+                vm.zoom = vm.onFocusZoom;
             }
         },
     },
@@ -152,7 +172,7 @@ export default {
         axios.get(`${vm.url}/buildings/?format=json`).then((res) => {
             vm.buildings = res.data; 
             for (let i = 0; i < vm.buildings.length; ++i)
-                vm.buildings[i].center = vm.coordsCenter(vm.buildings[i].geom.coordinates[0][0]);
+                vm.buildings[i].center = vm.multiPolygonCenter(vm.buildings[i].geom.coordinates);
         }).catch((err) => {
             console.log(err);
         });

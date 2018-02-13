@@ -39,6 +39,7 @@ export default {
     props: [ 'buildings', 'map' ],
     methods: {
         locate(id) {
+            $('.buildings-modal').modal('hide');
             this.$emit('locateBuilding', id);
         },
     }
