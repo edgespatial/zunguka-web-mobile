@@ -1,2 +1,2 @@
-# zunguka-mobile
-Zunguka mobile app
+# zunguka-web-mobile
+Zunguka app for mobile devices.
