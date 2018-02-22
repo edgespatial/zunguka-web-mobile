@@ -24,7 +24,7 @@
         </div>
         <div class="container-fluid m-0 p-0 controls">
             <div class="row text-center m-0 p-0">
-                <div class="col-3">
+                <div @click="toHome" class="col-3 active">
                     <a href="#"><i class="fa fa-map"></i>Home</a>
                 </div>
                 <div class="col-3">
@@ -89,7 +89,12 @@ export default {
         },
     },
     methods: {
-       buildSearchItems: _.debounce(function() {
+        toHome() {
+            const vm = this;
+            vm.center = CENTER;
+            vm.zoom = vm.onFocusZoom;
+        },
+        buildSearchItems: _.debounce(function() {
            const vm = this;
            let items = [];
            let search = _.lowerCase(vm.searchText.trim());
@@ -113,44 +118,15 @@ export default {
                    }
                }
            }
-
            vm.searchItems = _.take(items.sort(), MAX_SEARCH_RESULTS);
         }, 500),
-        multiPolygonCenter(multiPoly) {
-            if (! multiPoly || ! multiPoly.length) 
-                return NaN;
-
-            const vm = this;
-            let lat = 0;
-            let lng = 0;
-            let latLng = null;
-            for (let poly of multiPoly) {
-                latLng = vm.polygonCenter(poly); 
-                lat += latLng[0];
-                lng += latLng[1];
-            }
-            return [lat/multiPoly.length, lng/multiPoly.length];
-        },
-        polygonCenter(poly) {
-            if (! poly || ! poly.length) 
-                return NaN;
-
-            let lng = 0; 
-            let lat = 0;
-            for (let coord of poly) {
-                lat += coord[0]; 
-                lng += coord[1]; 
-            }
-
-            return [lat/coords.length, lng/poly.length];
-        },
         locateBuilding(id) {
             const vm = this;
             const building = vm.buildings.find(b => b.id == id);
             if (building) {
-                vm.activeBoundary = building.geom;
-                vm.activeMarker = building.center;
-                vm.center = building.center;
+                //vm.activeBoundary = building.geom;
+                vm.activeMarker = building.point.coordinates;
+                vm.center = building.point.coordinates;
                 vm.zoom = vm.onFocusZoom;
             }
         },
@@ -171,8 +147,6 @@ export default {
         });
         axios.get(`${vm.url}/buildings/?format=json`).then((res) => {
             vm.buildings = res.data; 
-            for (let i = 0; i < vm.buildings.length; ++i)
-                vm.buildings[i].center = vm.multiPolygonCenter(vm.buildings[i].geom.coordinates);
         }).catch((err) => {
             console.log(err);
         });

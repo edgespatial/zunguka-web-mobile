@@ -22,7 +22,7 @@
                                     {{ building.name }} 
                                     {{ building.abrv ? `(${building.abrv})` : '' }}
                                 </p>
-                                <button @click="locate(building.id)" class="btn btn-primary float-right locate"><i class="fa fa-map-marker"></i></button>
+                                <button @click="locate(building.id)" class="btn float-right locate"><i class="fa fa-map-marker"></i></button>
                             </li>
                         </template>
                     </ul>

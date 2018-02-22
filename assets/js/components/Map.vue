@@ -47,7 +47,10 @@ export default {
             try {
                 vm.marker.remove();
             } catch (e) { }
-            vm.marker = new mapboxgl.Marker()
+
+            var el = document.createElement('div');
+            el.className = 'marker';
+            vm.marker = new mapboxgl.Marker(el)
                 .setLngLat(vm.activeMarker)
                 .addTo(vm.map);
         },
@@ -100,5 +103,14 @@ export default {
 #map { 
     border: 1px solid orange;
     min-height: calc(100vh - 130px); 
+}
+.marker {
+    background-image: url('../../img/marker.png');
+    background-size: cover;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+
 }
 </style>
